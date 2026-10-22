@@ -1,0 +1,143 @@
+/* ==========================================================
+   Transisi pindah halaman — panel hitam tinggi jatuh dari atas
+   File: public/css/page-transition.css
+   ========================================================== */
+
+:root {
+  --pt-black: #0a0a0b;                              /* hitam solid, tanpa gradien */
+  --pt-gold: #e8c46e;
+  --pt-ease-in: cubic-bezier(.22, 1, .36, 1);       /* jatuh lalu mendarat halus */
+  --pt-ease-out: cubic-bezier(.6, 0, .9, .5);       /* meluncur turun makin cepat */
+}
+
+/* Penutup sementara saat halaman baru dimuat (mencegah kilatan) */
+html.pt-covered::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: var(--pt-black);
+}
+
+/* ---------- Wadah ---------- */
+.pt-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  pointer-events: none;
+  overflow: hidden;
+}
+.pt-grid.is-active { display: block; pointer-events: all; }
+
+.pt-tiles { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr; }
+
+/* ---------- Panel: kotak panjang setinggi layar, berjajar ke samping ---------- */
+.pt-tile {
+  position: relative;
+  margin: 0 -.5px;                                   /* tumpang tindih tipis, tanpa celah */
+  background: var(--pt-black);
+  box-shadow: inset 1px 0 0 rgba(232, 196, 110, .16); /* garis emas tipis pemisah antar panel */
+  transform: translate3d(0, -101%, 0);
+  will-change: transform;
+}
+
+/* Masuk: panel jatuh dari atas, berurutan dari kiri ke kanan */
+.pt-grid.is-covering .pt-tile {
+  transform: none;
+  transition: transform var(--dur-in, 500ms) var(--pt-ease-in) var(--d, 0ms);
+}
+/* Halaman baru: layar sudah tertutup penuh */
+.pt-grid.is-covered .pt-tile { transform: none; transition: none; }
+/* Keluar: panel terus jatuh ke bawah dan lepas dari layar */
+.pt-grid.is-revealing .pt-tile {
+  transform: translate3d(0, 101%, 0);
+  transition: transform var(--dur-out, 540ms) var(--pt-ease-out) var(--d, 0ms);
+}
+
+/* ---------- Logo di tengah ---------- */
+.pt-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 116px;
+  height: 116px;
+  margin: -70px 0 0 -58px;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: scale(.85);
+}
+.pt-badge {
+  width: 86px;
+  height: 86px;
+  border-radius: 9999px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(232, 196, 110, .45), 0 22px 50px -10px rgba(0, 0, 0, .9);
+}
+.pt-badge img { width: 100%; height: 100%; object-fit: contain; }
+.pt-badge b { font: 700 1.4rem/1 'Plus Jakarta Sans', system-ui, sans-serif; color: #111; }
+
+.pt-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.pt-ring circle {
+  fill: none;
+  stroke: var(--pt-gold);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 352;
+  stroke-dashoffset: 352;
+}
+
+.pt-name {
+  position: absolute;
+  top: calc(100% + 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.05rem;
+  letter-spacing: .14em;
+  color: var(--pt-gold);
+  opacity: 0;
+}
+
+.pt-grid.is-covering .pt-logo {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity .35s ease var(--logo-delay, 300ms), transform .55s var(--pt-ease-in) var(--logo-delay, 300ms);
+}
+.pt-grid.is-covering .pt-ring circle {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset .7s var(--pt-ease-in) var(--logo-delay, 300ms);
+}
+.pt-grid.is-covering .pt-name {
+  opacity: 1;
+  transition: opacity .45s ease calc(var(--logo-delay, 300ms) + 160ms);
+}
+.pt-grid.is-covered .pt-logo { opacity: 1; transform: scale(1); }
+.pt-grid.is-covered .pt-ring circle { stroke-dashoffset: 0; }
+.pt-grid.is-covered .pt-name { opacity: 1; }
+.pt-grid.is-revealing .pt-logo {
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity .2s ease, transform .3s ease;
+}
+.pt-grid.is-revealing .pt-ring circle { stroke-dashoffset: 0; }
+.pt-grid.is-revealing .pt-name { opacity: 0; transition: opacity .15s ease; }
+
+/* ---------- Konten halaman baru naik halus ---------- */
+html.pt-enter main { animation: pt-content-in .8s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes pt-content-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Hormati pengaturan "kurangi gerakan" ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .pt-grid { display: none !important; }
+  html.pt-covered::after { display: none !important; }
+  html.pt-enter main { animation: none; }
+}
