@@ -48,4 +48,4 @@ ENV PORT=80 \
 
 USER www-data
 
-CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
+CMD ["sh", "-c", "cp -n /app/database/database.sqlite /tmp/database.sqlite; frankenphp run --config /etc/frankenphp/Caddyfile"]
